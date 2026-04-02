@@ -1,0 +1,130 @@
+---
+title: "Configuration"
+description: Configure WebGoat for your environment
+---
+
+WebGoat exposes several environment variables that let you control how it binds to the network, which port it uses, and which lessons are shown. This page covers the options relevant to learners setting up and customising their environment.
+
+## Configuration options
+
+<ParamField path="WEBGOAT_HOST" type="string" default="127.0.0.1">
+  The address WebGoat binds to. The default keeps WebGoat accessible only from your own machine. Change this only if you need to reach WebGoat from another host — and only in an isolated, trusted environment.
+</ParamField>
+
+<ParamField path="WEBGOAT_PORT" type="number" default="8080">
+  The port WebGoat listens on. Change this if port 8080 is already in use.
+</ParamField>
+
+<ParamField path="WEBWOLF_HOST" type="string" default="127.0.0.1">
+  The address WebWolf binds to. When using a proxy tool like OWASP ZAP or Burp Suite, set this to a custom hostname (e.g. `www.webwolf.local`) instead of `127.0.0.1`.
+</ParamField>
+
+<ParamField path="WEBWOLF_PORT" type="number" default="9090">
+  The port WebWolf listens on. Change this if port 9090 is already in use.
+</ParamField>
+
+<ParamField path="TZ" type="string">
+  Timezone for the WebGoat process. Some lessons depend on the application running in the correct timezone. Examples: `Europe/Amsterdam`, `America/Boise`, `Asia/Tokyo`.
+</ParamField>
+
+<ParamField path="EXCLUDE_CATEGORIES" type="string">
+  Comma-separated list of lesson category names to hide from the menu. For example: `"CLIENT_SIDE,GENERAL,CHALLENGE"`. Useful when running WebGoat in a course or workshop where you want to focus on specific topics.
+</ParamField>
+
+<ParamField path="EXCLUDE_LESSONS" type="string">
+  Comma-separated list of lesson class names to hide from the menu. For example: `"SqlInjectionAdvanced,SqlInjectionMitigations"`. Use the exact Java class name of the lesson.
+</ParamField>
+
+<ParamField path="WEBGOAT_SSLENABLED" type="boolean" default="false">
+  Enable HTTPS for WebGoat. When set to `true`, WebGoat uses the configured keystore to serve traffic over SSL.
+</ParamField>
+
+## Examples
+
+<Tabs>
+  <Tab title="Docker">
+    Pass options using `-e` flags on the `docker run` command.
+
+    **Basic run with timezone:**
+    ```bash
+    docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 \
+      -e TZ=America/Boise \
+      webgoat/webgoat
+    ```
+
+    **Custom ports:**
+    ```bash
+    docker run -it -p 127.0.0.1:8001:8001 -p 127.0.0.1:8002:8002 \
+      -e WEBGOAT_PORT=8001 \
+      -e WEBWOLF_PORT=8002 \
+      webgoat/webgoat
+    ```
+
+    **Custom menu (hide categories and lessons):**
+    ```bash
+    docker run -d -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 \
+      -e EXCLUDE_CATEGORIES="CLIENT_SIDE,GENERAL,CHALLENGE" \
+      -e EXCLUDE_LESSONS="SqlInjectionAdvanced,SqlInjectionMitigations" \
+      webgoat/webgoat
+    ```
+
+    **With proxy setup (ZAP or Burp):**
+
+    First, add to your `/etc/hosts`:
+    ```
+    127.0.0.1 www.webgoat.local www.webwolf.local
+    ```
+
+    Then run:
+    ```bash
+    docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 \
+      -e WEBGOAT_HOST=www.webgoat.local \
+      -e WEBWOLF_HOST=www.webwolf.local \
+      -e TZ=America/Boise \
+      webgoat/webgoat
+    ```
+
+    WebGoat will be at [http://www.webgoat.local:8080/WebGoat](http://www.webgoat.local:8080/WebGoat) and WebWolf at [http://www.webwolf.local:9090/WebWolf](http://www.webwolf.local:9090/WebWolf).
+  </Tab>
+  <Tab title="Standalone JAR">
+    Set options as environment variables before running the JAR, or pass WebGoat/WebWolf ports as command-line arguments.
+
+    **With timezone:**
+    ```bash
+    export TZ=Europe/Amsterdam
+    java -Dfile.encoding=UTF-8 -jar webgoat-2023.8.jar
+    ```
+
+    **Custom ports:**
+    ```bash
+    java -jar webgoat-2023.8.jar --webgoat.port=8001 --webwolf.port=8002
+    ```
+
+    **Custom menu:**
+    ```bash
+    export TZ=Europe/Amsterdam
+    export EXCLUDE_CATEGORIES="CLIENT_SIDE,GENERAL,CHALLENGE"
+    export EXCLUDE_LESSONS="SqlInjectionAdvanced,SqlInjectionMitigations"
+    java -jar target/webgoat-2023.8-SNAPSHOT.jar
+    ```
+
+    **With proxy setup (ZAP or Burp):**
+
+    First, add to your `/etc/hosts`:
+    ```
+    127.0.0.1 www.webgoat.local www.webwolf.local
+    ```
+
+    Then set the host variables before running:
+    ```bash
+    export WEBGOAT_HOST=www.webgoat.local
+    export WEBWOLF_HOST=www.webwolf.local
+    export TZ=America/Boise
+    java -Dfile.encoding=UTF-8 -jar webgoat-2023.8.jar
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Never set `WEBGOAT_HOST` or `WEBWOLF_HOST` to a publicly routable address. WebGoat is deliberately insecure and must only be accessible from your own machine or a controlled, isolated network.
+</Warning>

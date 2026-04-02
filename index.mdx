@@ -1,97 +1,74 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "WebGoat — Learn Web Security by Doing"
+description: "A deliberately insecure web application maintained by OWASP that teaches web application security through hands-on, interactive lessons covering the OWASP Top 10 and beyond."
 ---
 
-## Setting up
+WebGoat is an open-source, deliberately insecure web application created by [OWASP](https://owasp.org/) to help developers, testers, and security professionals learn about web application vulnerabilities in a safe, legal environment. Practice real-world attack techniques, understand how they work, and learn how to defend against them.
 
-Get your documentation site up and running in minutes.
+<Warning>
+  WebGoat is intentionally vulnerable. Never expose it to the internet or run it on a machine connected to sensitive networks. Always disconnect from external networks while using WebGoat.
+</Warning>
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Get WebGoat running in under 5 minutes using Docker.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Installation Guide" icon="download" href="/installation">
+    Explore all installation options: Docker, standalone JAR, and from source.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Security Lessons" icon="shield-halved" href="/lessons/overview">
+    Browse 30+ interactive lessons covering the OWASP Top 10 vulnerabilities.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="WebWolf" icon="wolf-pack-battalion" href="/webwolf/introduction">
+    Learn how to use the companion attacker tool to complete advanced lessons.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What you will learn
 
-Everything you need to create world-class documentation.
+WebGoat provides hands-on exercises for every major category of the OWASP Top 10, organized so you progress from understanding a vulnerability concept to actively exploiting it and then learning how to fix it.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+<CardGroup cols={2}>
+  <Card title="Injection Attacks" icon="syringe" href="/lessons/injection">
+    SQL injection, command injection, XML injection, and more.
   </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+  <Card title="Broken Access Control" icon="lock-open" href="/lessons/broken-access-control">
+    IDOR, missing function-level access control, and authentication bypass.
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
+  <Card title="Cryptographic Failures" icon="key" href="/lessons/cryptographic-failures">
+    Weak hashing, insecure password storage, and JWT vulnerabilities.
   </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+  <Card title="Security Misconfiguration" icon="gear" href="/lessons/security-misconfiguration">
+    XXE, path traversal, and open redirects.
   </Card>
-</Columns>
+  <Card title="Client-Side Attacks" icon="display" href="/lessons/client-side">
+    Cross-site scripting (XSS), CSRF, HTML tampering, and DOM manipulation.
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/contributing/guide">
+    Help improve WebGoat by reporting issues or creating new lessons.
+  </Card>
+</CardGroup>
 
-## Need inspiration?
+## Get started in minutes
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Steps>
+  <Step title="Run WebGoat with Docker">
+    Pull and start the latest WebGoat container with a single command:
+    ```bash
+    docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 webgoat/webgoat
+    ```
+  </Step>
+  <Step title="Create an account">
+    Open [http://localhost:8080/WebGoat](http://localhost:8080/WebGoat) in your browser and register a new account. Your progress is saved per user.
+  </Step>
+  <Step title="Choose a lesson">
+    Use the left-hand navigation to browse lessons by OWASP category. Start with **Introduction** if you are new to WebGoat.
+  </Step>
+  <Step title="Complete assignments">
+    Each lesson contains reading material followed by interactive assignments. Use the built-in hints if you get stuck.
+  </Step>
+</Steps>
+
+<Note>
+  WebGoat is maintained by OWASP volunteers. If you find bugs or want to contribute new lessons, see the [Contributing Guide](/contributing/guide).
+</Note>

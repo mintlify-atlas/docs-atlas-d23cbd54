@@ -1,0 +1,56 @@
+---
+title: 'What is WebWolf'
+description: 'WebWolf is the companion attacker-controlled server for WebGoat lessons, simulating what an attacker would control during a real attack.'
+keywords: ['webwolf', 'attacker server', 'webgoat companion', 'security training']
+---
+
+WebWolf is a separate web application that runs alongside WebGoat. It represents the attacker's machine in a lesson scenario, giving you a place to receive stolen data, host malicious files, and inspect incoming requests — without mixing up what the "victim" application (WebGoat) does with what you, playing the attacker, control.
+
+The idea came from workshops where learners found it hard to distinguish between actions taken as the website user versus actions taken as the attacker. WebWolf makes that boundary explicit.
+
+<Note>
+You only need WebWolf when a lesson requires it. Many lessons work entirely within WebGoat. Lessons that use WebWolf are marked with a wolf icon in the top-right corner of the assignment. You are not required to use WebWolf — any tool that can receive HTTP requests (such as `netcat` or Burp Collaborator) works just as well.
+</Note>
+
+## How WebGoat and WebWolf relate
+
+WebGoat and WebWolf run as two independent Spring Boot applications sharing the same database.
+
+| Application | Default port | Default URL |
+|-------------|-------------|-------------|
+| WebGoat     | 8080        | `http://localhost:8080/WebGoat` |
+| WebWolf     | 9090        | `http://localhost:9090/WebWolf` |
+
+WebGoat acts as the vulnerable target. WebWolf acts as the attacker-controlled server. During a lesson, WebGoat may send a password reset email, issue an HTTP request to an external host, or fetch a remote file — and WebWolf is there to catch it.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Request tracker" icon="radar">
+    Captures every HTTP request made to `/WebWolf/landing/**`. Use it to harvest cookies, tokens, or any data exfiltrated from WebGoat via XSS or CSRF payloads.
+  </Card>
+  <Card title="Mailbox" icon="envelope">
+    Receives emails sent by WebGoat during lessons such as password reset flows. Each user has a separate inbox keyed to their username.
+  </Card>
+  <Card title="File server" icon="file">
+    Lets you upload files and serve them at a public URL. Useful for hosting malicious DTDs in XXE attacks, external entities in SSRF, or any file WebGoat needs to fetch.
+  </Card>
+  <Card title="JWT editor" icon="key">
+    Decodes, modifies, and re-signs JWT tokens. Supports HMAC shared-secret signing and JWKS-based verification. Used in JWT-focused lessons.
+  </Card>
+</CardGroup>
+
+## When WebWolf is needed
+
+WebWolf is used in lessons that require an external server to complete the attack chain. Common examples include:
+
+- **Password reset attacks** — WebGoat sends a reset link or token to WebWolf's mailbox.
+- **Cross-site request forgery (CSRF)** — your attacker page is hosted on WebWolf and tricks the victim into making requests.
+- **Path traversal / XXE** — you host a malicious file on WebWolf's file server and point the vulnerable application at it.
+- **Cross-site scripting (XSS)** — your XSS payload sends stolen cookies or tokens to WebWolf's landing page, where you can read them.
+
+<CardGroup cols={2}>
+  <Card title="Using WebWolf" icon="play" href="/webwolf/using-webwolf">
+    Step-by-step instructions for each WebWolf feature.
+  </Card>
+</CardGroup>

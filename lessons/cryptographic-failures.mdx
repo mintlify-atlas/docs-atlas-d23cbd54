@@ -1,0 +1,76 @@
+---
+title: 'Cryptographic failures'
+description: Learn about weak cryptography, insecure password storage, JWT vulnerabilities, and cryptography basics through hands-on WebGoat lessons.
+keywords: ['cryptographic failures', 'jwt', 'hashing', 'encryption', 'password storage', 'owasp a2', 'webgoat']
+---
+
+Cryptographic failures occur when sensitive data is exposed because cryptography is absent, weak, or incorrectly implemented. This covers a wide range: passwords stored as plain hashes, data transmitted over HTTP instead of HTTPS, JWTs signed with weak secrets or none at all, and symmetric keys hard-coded in source code. OWASP ranks this as **(A2) Cryptographic Failures** — the root cause of many high-profile data breaches.
+
+<Note>
+These lessons map to OWASP Top 10 category **(A2) Cryptographic Failures** and also touch on **(A7) Identification and Authentication Failures**.
+</Note>
+
+## Lessons in this category
+
+<AccordionGroup>
+  <Accordion title="Cryptography basics">
+    This foundational lesson covers the cryptographic primitives that appear throughout web application security. Understanding the difference between encoding, hashing, encryption, and signing is essential for recognizing when each is misused.
+
+    **Encoding** transforms data into another representation format (e.g., Base64) for transport or storage compatibility. It is *not* a security control — encoding is fully reversible without any secret.
+
+    **Hashing** produces a fixed-length digest from arbitrary input using a one-way function. A single byte change in the input produces a completely different hash. Hashing is used for integrity verification and password storage, but weak algorithms (MD5, SHA-1) are vulnerable to collision attacks. Plain hashes of passwords are also vulnerable to precomputed rainbow table attacks.
+
+    **Salted hashing** adds a unique random value to each password before hashing, making precomputed tables useless. The OWASP Password Storage Cheat Sheet recommends algorithms specifically designed for password hashing, such as bcrypt, scrypt, or Argon2.
+
+    **Symmetric encryption** uses a single shared key for both encryption and decryption (e.g., AES). Both parties must possess the same key, so key distribution is a challenge.
+
+    **Asymmetric encryption** uses a mathematically linked key pair — a public key and a private key. Data encrypted with the public key can only be decrypted with the private key. HTTPS uses asymmetric encryption during the handshake to exchange a session key, then switches to symmetric encryption for the bulk of the data transfer.
+
+    **Digital signatures** use asymmetric keys in reverse: data is signed with the private key, and anyone holding the public key can verify the signature. This proves both integrity and authenticity.
+
+    **Keystores** are protected containers for cryptographic keys and certificates. The lesson covers how to create and manage keystores in Java and why protecting the keystore password is as critical as protecting the keys themselves.
+
+    **Post-quantum cryptography** introduces the threat that large-scale quantum computers pose to current asymmetric algorithms (RSA, ECC) and the NIST-standardized post-quantum alternatives being adopted to replace them.
+
+    The lesson includes hands-on assignments after each topic: cracking plain (unsalted) hashes from a dictionary, observing the effect of salting, encrypting and decrypting data, and verifying a digital signature.
+  </Accordion>
+
+  <Accordion title="JWT (JSON Web Tokens)">
+    JSON Web Tokens are a widely used mechanism for stateless authentication. A JWT consists of three Base64URL-encoded parts separated by dots: a **header** (algorithm and token type), a **payload** (claims about the user), and a **signature** (computed over the header and payload using a secret or private key).
+
+    Because JWTs are self-contained, the server does not need to query a session store on every request — it simply verifies the signature. But this design also means that a valid signature on a forged token grants full access, making correct JWT implementation critical.
+
+    The WebGoat JWT lesson covers the full attack surface:
+
+    **Token structure and decoding** — You learn to Base64URL-decode a JWT and read the claims in the payload. This is not an attack; any party holding the token can read its contents without the signing key. Sensitive data should never be stored in a JWT payload unless the token is also encrypted (JWE).
+
+    **Weak signing secrets** — Many applications sign JWTs with a secret that is too short, uses a dictionary word, or is left at a default value like `secret`. The lesson has you brute-force the signing secret of a token, then forge a new token with elevated privileges. The fix is to use a cryptographically random secret of at least 256 bits.
+
+    **Algorithm confusion (alg:none attack)** — The JWT header includes an `alg` field. Some vulnerable libraries honor `"alg": "none"`, accepting unsigned tokens as valid. The assignment has you change the algorithm to `none`, strip the signature, and observe whether the server accepts the token. A correct implementation must whitelist allowed algorithms and reject `none`.
+
+    **`kid` claim misuse** — The Key ID (`kid`) header claim is intended to tell the server which key to use for signature verification. In some implementations, `kid` is used directly in a database query or file path lookup without sanitization. You can inject SQL or a path traversal into `kid` to force the server to use a key you control, then forge a token signed with that key.
+
+    **`jku` claim misuse** — The JWK Set URL (`jku`) header claim tells the server where to fetch the public keys for verification. A vulnerable server fetches keys from the URL in the token itself without validating that the URL points to a trusted source. You host your own JWK set, set `jku` to point to it, sign a forged token with your private key, and the server fetches your public key and accepts the forged token.
+
+    **Token refresh vulnerabilities** — Applications that issue refresh tokens must ensure that the refresh token cannot be used to obtain access tokens for a different user. The lesson covers how to identify and exploit weaknesses in refresh token flows.
+
+    **JWT mitigation** — The final section covers defensive practices: always verify the signature before reading any claims, use an allowlist for accepted algorithms, validate all standard claims (`exp`, `iss`, `aud`), store tokens securely (avoid `localStorage` if XSS is a concern), and rotate signing keys periodically.
+  </Accordion>
+
+  <Accordion title="Secure passwords">
+    This lesson focuses on what makes a password policy and storage strategy genuinely secure. It covers:
+
+    - Why minimum length matters more than complexity requirements
+    - How password managers change the threat model
+    - The difference between a password policy that blocks weak passwords versus one that enforces arbitrary rules that frustrate users without improving security
+    - Implementing and validating bcrypt or Argon2 password hashing in a real application
+
+    You review a vulnerable implementation that stores passwords as unsalted MD5 hashes, identify the weaknesses, and implement a corrected version using a proper password hashing algorithm.
+  </Accordion>
+
+  <Accordion title="Insecure login">
+    The insecure login lesson demonstrates the risk of transmitting credentials over an unencrypted or weakly protected channel. Even if the server correctly hashes passwords at rest, credentials captured in transit are just as useful to an attacker.
+
+    Using the browser's developer tools and a proxy, you intercept a login request and observe credentials transmitted in a form that is trivially readable. The lesson reinforces why HTTPS must be enforced everywhere credentials are submitted and why mixed-content pages (HTTP assets on an HTTPS page) can undermine transport security.
+  </Accordion>
+</AccordionGroup>

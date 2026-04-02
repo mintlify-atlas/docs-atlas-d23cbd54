@@ -1,0 +1,83 @@
+{
+  "projectType": "saas",
+  "projectName": "WebGoat",
+  "projectDescription": "WebGoat is a deliberately insecure web application maintained by OWASP that teaches web application security through interactive hands-on lessons covering the OWASP Top 10 and beyond.",
+  "theme": "almond",
+  "primaryColor": "#153593",
+  "lightColor": "#839cb4",
+  "darkColor": "#e4eaee",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Running WebGoat",
+            "pages": [
+              "running/docker",
+              "running/standalone",
+              "running/configuration"
+            ]
+          },
+          {
+            "group": "Security Lessons",
+            "pages": [
+              "lessons/overview",
+              "lessons/injection",
+              "lessons/broken-access-control",
+              "lessons/cryptographic-failures",
+              "lessons/security-misconfiguration",
+              "lessons/client-side"
+            ]
+          },
+          {
+            "group": "WebWolf",
+            "pages": [
+              "webwolf/introduction",
+              "webwolf/using-webwolf"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/guide",
+              "contributing/creating-lessons"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "30+ interactive security vulnerability lessons mapped to OWASP Top 10",
+    "User accounts with per-user lesson progress tracking",
+    "WebWolf companion tool for simulating attacker-controlled server",
+    "Docker and standalone JAR deployment options",
+    "Hints system and automated assignment grading",
+    "Customizable lesson menu via environment variables",
+    "Support for SQL Injection, XSS, CSRF, JWT, Path Traversal, XXE, SSRF, and more",
+    "Integration tests for all lessons ensuring correctness"
+  ],
+  "publicApiSurface": [
+    "GET /WebGoat/ — Main application entry point",
+    "POST /register.mvc — User registration",
+    "POST /login — Form-based authentication",
+    "GET /WebGoat/welcome.mvc — Dashboard after login",
+    "GET /WebGoat/startlesson.mvc — Start a specific lesson",
+    "POST /WebGoat/assignment/* — Submit assignment answers",
+    "GET /WebWolf/ — WebWolf companion tool",
+    "GET /actuator/health — Health check endpoint",
+    "AssignmentEndpoint interface — Base for creating lesson assignments",
+    "Lesson abstract class — Base for creating new lessons",
+    "Category enum — Lesson categories (A1-A10, CLIENT_SIDE, CHALLENGE, etc.)",
+    "AttackResult / AttackResultBuilder — Assignment result model"
+  ]
+}

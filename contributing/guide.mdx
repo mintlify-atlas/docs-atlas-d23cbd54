@@ -1,0 +1,140 @@
+---
+title: "Contributing to WebGoat"
+description: How to contribute to the WebGoat open-source project, including filing issues, submitting pull requests, and meeting code quality requirements.
+keywords: ['contributing', 'pull request', 'open source', 'WebGoat', 'OWASP']
+---
+
+WebGoat is an open-source project and welcomes contributions of all kinds. Whether you want to report a bug, improve documentation, add a new lesson, or help financially, there are several ways to get involved.
+
+<CardGroup cols={3}>
+  <Card title="File an issue" icon="circle-exclamation" href="https://github.com/WebGoat/WebGoat/issues">
+    Report bugs, missing content, or suggest improvements on GitHub.
+  </Card>
+  <Card title="Submit a pull request" icon="code-pull-request" href="https://github.com/WebGoat/WebGoat/pulls">
+    Open an issue first, then fork the repo and submit a PR.
+  </Card>
+  <Card title="Donate" icon="heart" href="https://owasp.org/donate/?reponame=www-project-webgoat&title=OWASP+WebGoat">
+    Support the project financially through OWASP donations.
+  </Card>
+</CardGroup>
+
+## Ways to contribute
+
+- **File [issues](https://github.com/WebGoat/WebGoat/issues)** for missing content or errors. Explain what you think is missing and give a suggestion as to where it could be added.
+- **Create a pull request**. This is a direct contribution and may be merged after review. For anything beyond a typo fix, [open an issue](https://github.com/WebGoat/WebGoat/issues) first so the team can review the merit before you invest time in the work.
+- **Help out financially** by donating via [OWASP donations](https://owasp.org/donate/?reponame=www-project-webgoat&title=OWASP+WebGoat).
+
+## Setting up your contributor environment
+
+<Steps>
+  <Step title="Fork the repository">
+    Create a GitHub account if you don't already have one. Fork the [WebGoat repository](https://github.com/WebGoat/WebGoat) to your own account — this gives you a personal copy to work in without affecting the upstream project.
+  </Step>
+  <Step title="Clone and add the upstream remote">
+    Clone your fork locally, then add the upstream remote so you can keep your fork in sync:
+
+    ```bash
+    git remote -v
+    # origin  git@github.com:<your-handle>/WebGoat.git (fetch)
+    # origin  git@github.com:<your-handle>/WebGoat.git (push)
+
+    git remote add upstream git@github.com:WebGoat/WebGoat.git
+
+    git remote -v
+    # origin   git@github.com:<your-handle>/WebGoat.git (fetch)
+    # origin   git@github.com:<your-handle>/WebGoat.git (push)
+    # upstream git@github.com:OWASP/WebGoat.git (fetch)
+    # upstream git@github.com:OWASP/WebGoat.git (push)
+    ```
+  </Step>
+  <Step title="Choose an issue to work on">
+    Browse [open issues](https://github.com/WebGoat/WebGoat/issues) and pick one to work on. Look for issues tagged `good first issue` or `help wanted` if you're new to the project.
+  </Step>
+  <Step title="Create a branch">
+    Create a dedicated branch for the issue you're fixing:
+
+    ```bash
+    git checkout -b FixingIssue66
+    ```
+  </Step>
+  <Step title="Make your changes">
+    Open your editor (IntelliJ IDEA is recommended) and make your modifications. All new and changed code must include corresponding unit and/or integration tests. New or changed lessons **must** have an integration test.
+  </Step>
+  <Step title="Push and open a pull request">
+    Stage, commit, and push your changes:
+
+    ```bash
+    git add <modified-files>
+    git commit -m 'feat: add SQL injection lesson assignment'
+    git push
+    ```
+
+    Then go to your fork on GitHub and click **New Pull Request**. Target the `main` branch and follow the PR template checklist.
+  </Step>
+  <Step title="Respond to review feedback">
+    Reviewers may leave comments. Push additional commits to the same branch — GitHub automatically updates the open PR.
+  </Step>
+</Steps>
+
+### Keeping your fork up to date
+
+Before starting a new PR, sync your local repo with the upstream:
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+<Tip>
+  Don't work on too many issues at once. The longer a branch stays open, the harder it becomes to merge.
+</Tip>
+
+## Code requirements
+
+The minimum requirements for all code contributions are:
+
+1. Code must be compliant with the configured **Java Google Formatter**, **Checkstyle**, and **PMD** rules.
+2. All new and changed code should have a corresponding **unit and/or integration test**.
+3. New and changed lessons **must** have a corresponding **integration test**.
+4. All [status checks](https://docs.github.com/en/github/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks) must pass on your last commit.
+
+## Writing commit messages
+
+WebGoat uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). This format enables automatic generation of release notes.
+
+The supported types are:
+
+| Type       | When to use                              |
+| ---------- | ---------------------------------------- |
+| `fix:`     | A bug fix                                |
+| `feat:`    | A new feature                            |
+| `build:`   | Build system or dependency changes       |
+| `chore:`   | Routine tasks not affecting source/tests |
+| `ci:`      | CI configuration changes                 |
+| `docs:`    | Documentation only changes               |
+| `refactor:`| Code change that is not a fix or feature |
+| `test:`    | Adding or updating tests                 |
+
+If your commit closes an issue, reference it in the message:
+
+```bash
+git commit -m 'fix: correct SQL injection query validation
+
+Closes #545'
+```
+
+## Pull request guidelines
+
+### Keep PRs focused
+
+Pull requests should be as small and atomic as possible. Large, wide-sweeping changes will be **rejected** with a request to split them. Examples:
+
+- If you're fixing spelling in the docs, don't modify unrelated source files.
+- If you're adding a new function, don't clean up unrelated functions in the same PR.
+
+### What not to include
+
+- Advertisements or promotion of commercial tools or companies.
+- Unnecessary self-promotion of tools or blog posts. If you have an affiliation with a URL or tool you're referencing, disclose it in the PR.
+
+Please review the [Code of Conduct](https://github.com/WebGoat/WebGoat/blob/master/CODE_OF_CONDUCT.md) before contributing.

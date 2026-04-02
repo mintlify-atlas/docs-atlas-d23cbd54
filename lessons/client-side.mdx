@@ -1,0 +1,100 @@
+---
+title: 'Client-side attacks'
+description: Learn XSS, CSRF, HTML tampering, client-side filtering bypass, and HTTP proxy techniques through hands-on WebGoat lessons.
+keywords: ['xss', 'csrf', 'cross-site scripting', 'html tampering', 'client-side', 'webgoat']
+---
+
+Client-side attacks target the browser and the trust relationships between browsers, servers, and users. Unlike server-side vulnerabilities where the attacker directly interacts with the server, client-side attacks often work by manipulating what a legitimate user's browser sends or renders. The impact ranges from credential theft and session hijacking to unauthorized state-changing actions performed by the victim's browser without their knowledge.
+
+<Note>
+These lessons map to the WebGoat **Client side** category and draw on attack classes that span the OWASP Top 10.
+</Note>
+
+<Tip>
+Keep your browser's developer tools open while working through these lessons. The **Network** tab lets you inspect every request and response. The **Console** tab lets you execute JavaScript in the page's context. The **Elements** tab lets you inspect and modify the live DOM. These tools are the same ones an attacker uses — getting comfortable with them is a core skill.
+</Tip>
+
+## Lessons in this category
+
+<AccordionGroup>
+  <Accordion title="Cross-Site Scripting (XSS)">
+    Cross-Site Scripting is a vulnerability where an application includes unvalidated and unencoded user-supplied data in its HTML output. A browser receiving that output has no way to distinguish the injected script from the legitimate page script, so it executes both.
+
+    XSS attacks can steal session cookies, redirect users to malicious sites, modify page content, log keystrokes, or use the victim's browser as a platform for attacking other systems. As web applications have grown richer and more JavaScript-dependent, the potential impact of a successful XSS attack has increased significantly.
+
+    WebGoat covers all three major XSS variants:
+
+    **Reflected XSS** — The injected script is embedded in the server's response to a single request that contains the malicious input. The script is not stored; it is "reflected" back immediately. An attacker delivers the attack by tricking a victim into clicking a crafted URL. You practice injecting a script into a search field and confirming that the browser executes it, then understand why the URL can be weaponized.
+
+    **Stored XSS** — The malicious script is saved by the application (in a database, comment thread, or user profile) and rendered for every subsequent visitor. This is more dangerous than reflected XSS because the attacker does not need to convince each victim to click a specific URL — every user who visits the affected page is attacked automatically. The lesson has you inject a script into a persistent input field and verify that it executes when the page is reloaded.
+
+    **DOM-based XSS** — The vulnerability exists entirely in client-side JavaScript. The server's response is not involved; instead, the page's own script reads attacker-controlled data from the URL fragment, `document.referrer`, or other DOM sources and writes it into the DOM without sanitization. Because the payload never reaches the server, server-side input validation cannot prevent it. You trace the data flow from source to sink in the page's JavaScript to locate and exploit the vulnerability.
+
+    The XSS mitigation strategy combines context-aware output encoding (HTML entity encoding for HTML contexts, JavaScript escaping for script contexts, URL encoding for attribute values in URLs) with a Content Security Policy (CSP) that restricts which script sources the browser will execute.
+  </Accordion>
+
+  <Accordion title="Cross-Site Request Forgery (CSRF)">
+    CSRF exploits the trust that a web server places in the browser of an authenticated user. When a user is logged into a site, their browser automatically attaches session cookies to every request to that site — including requests triggered by visiting a different site. An attacker on a third-party site can craft a form or image tag that causes the victim's browser to send a state-changing request to the target site with the victim's credentials attached.
+
+    CSRF attacks target state-changing operations: changing a password or email address, transferring funds, placing orders, or modifying account settings. An attacker does not receive the response (it goes to the victim's browser), so CSRF is only useful for side effects, not for stealing data.
+
+    The WebGoat CSRF lesson covers:
+
+    - **Basic GET-based CSRF** — An `<img>` tag or link on an attacker's page makes the victim's browser send a GET request to a vulnerable endpoint with the victim's session cookie
+    - **POST-based CSRF** — An auto-submitting HTML form on the attacker's page sends a POST request with arbitrary parameters to the target application
+    - **JSON CSRF** — When an application requires `Content-Type: application/json`, a standard HTML form cannot be used directly, but the lesson shows how content-type handling can sometimes still be exploited
+    - **CSRF with login** — Forced login CSRF, where an attacker tricks a user into authenticating as the attacker's account, is also explored
+
+    Defenses include:
+    - **Synchronizer token pattern** — The server issues a random CSRF token per session, embeds it as a hidden field in every form, and validates it on every state-changing request. An attacker on a third-party site cannot read the token due to the same-origin policy.
+    - **SameSite cookie attribute** — Setting `SameSite=Strict` or `SameSite=Lax` on session cookies prevents the browser from attaching them to cross-site requests. Many modern frameworks enable this by default.
+    - **Double submit cookie** — A variant where the CSRF token is also stored in a cookie and the server checks that the cookie value matches the form value.
+  </Accordion>
+
+  <Accordion title="HTML tampering">
+    HTML tampering refers to modifying the HTML of a page before submitting it, bypassing client-side controls that the developer expected to restrict input. Common examples include:
+
+    - Changing a hidden form field that contains a price, user ID, or discount code
+    - Removing the `disabled` attribute from a read-only form field
+    - Changing a `<select>` element's options to submit a value not offered in the original list
+    - Modifying the `maxlength` attribute of a text input to submit more data than the UI permits
+
+    These manipulations are trivial using browser developer tools. The attack illustrates a fundamental principle: **the server cannot trust any value that passed through the client.** Every constraint that matters must be enforced server-side.
+
+    The WebGoat HTML tampering lesson has you use the browser's element inspector to find and modify a hidden or constrained field, submit the tampered form, and observe that the server accepts the modified value. You then consider what server-side validation would prevent the attack.
+  </Accordion>
+
+  <Accordion title="Client-side filtering bypass">
+    Some applications retrieve a full dataset from the server and then use JavaScript to filter out records the current user should not see, displaying only the permitted subset in the UI. This pattern is a security flaw: the filtered-out data is already in the browser's memory or in the raw HTTP response and can be read by anyone who inspects the response.
+
+    The lesson demonstrates how to:
+    - Open the browser's network inspector and find the raw response for a filtered data request
+    - Read data that is present in the response but hidden from the UI by JavaScript filtering
+    - Understand why data-level authorization must be enforced at the server and data layer — the server should return only records the user is permitted to see, not a full dataset that the client is trusted to filter
+
+    This is a common mistake in applications that use JavaScript-heavy front-ends, where developers may conflate "not shown in the UI" with "not accessible to the user."
+  </Accordion>
+
+  <Accordion title="Chrome developer tools">
+    This introductory lesson teaches you to use the Chrome (or any Chromium-based) browser's built-in developer tools as a security testing aid. Topics covered include:
+
+    - **Network tab** — Inspecting HTTP requests and responses, copying requests as `curl` commands, replaying requests, and identifying parameters passed in query strings, form bodies, and headers
+    - **Console tab** — Executing arbitrary JavaScript in the context of the current page, reading cookies, and manipulating the DOM programmatically
+    - **Elements tab** — Viewing and editing the live DOM, modifying attribute values and hidden fields before form submission
+    - **Application tab** — Inspecting cookies (including their `HttpOnly` and `Secure` flags), `localStorage`, `sessionStorage`, and service workers
+
+    The lesson includes an assignment that requires you to find a specific value hidden in the page source or in a network response using the developer tools, reinforcing that these tools give you full visibility into everything the browser receives and sends.
+  </Accordion>
+
+  <Accordion title="HTTP proxies">
+    An HTTP proxy sits between your browser and the server, intercepting every request and response. Security testing proxies such as OWASP ZAP and Burp Suite let you pause requests before they are sent, modify any field (headers, cookies, body parameters), replay modified requests, and automate repetitive testing tasks.
+
+    The WebGoat HTTP proxies lesson teaches you to:
+    - Configure your browser to route traffic through a local proxy
+    - Intercept a request in the proxy and observe all of its components
+    - Modify a request parameter and forward the modified request to the server
+    - Use the proxy's repeater or history to replay and iterate on requests without going back through the browser UI
+
+    Working fluently with a proxy is a prerequisite skill for most of the other WebGoat lessons — many assignments require you to craft or modify requests that cannot be triggered through the normal browser UI. If you are new to security testing, completing the HTTP proxies lesson first is strongly recommended.
+  </Accordion>
+</AccordionGroup>

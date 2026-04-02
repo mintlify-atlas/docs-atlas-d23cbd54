@@ -1,0 +1,341 @@
+---
+title: "Creating a New Lesson"
+description: Step-by-step guide to building a new WebGoat security lesson, from the Java lesson class through assignments, HTML templates, and documentation.
+keywords: ['lesson', 'assignment', 'WebGoat', 'contributing', 'LessonTemplate', 'AssignmentEndpoint']
+---
+
+Each WebGoat lesson is a self-contained unit consisting of a Java class, one or more assignment endpoints, HTML template pages, and AsciiDoc content files. This guide walks through building a lesson from scratch using the official lesson template as a reference.
+
+<Tip>
+  Copy the `lessontemplate` package under `org.owasp.webgoat.lessons` as your starting point. It contains a working `LessonTemplate.java`, `SampleAttack.java`, HTML template, documentation `.adoc` files, and i18n properties — everything you need to get a new lesson running quickly.
+</Tip>
+
+## Lesson structure overview
+
+A complete lesson consists of the following files:
+
+```
+src/main/java/org/owasp/webgoat/lessons/{lessonname}/
+├── MyLesson.java               # Extends Lesson
+└── MyAttack.java               # Implements AssignmentEndpoint
+
+src/main/resources/lessons/{lessonname}/
+├── html/
+│   └── MyLesson.html           # Thymeleaf glue page
+├── documentation/
+│   ├── my-lesson-intro.adoc
+│   └── my-lesson-attack.adoc
+├── i18n/
+│   └── WebGoatLabels.properties
+└── images/
+```
+
+## Building a new lesson
+
+<Steps>
+  <Step title="Create the lesson class">
+    Create a new package under `org.owasp.webgoat.lessons` and add a class that extends `Lesson`. You must implement two abstract methods: `getDefaultCategory()` and `getTitle()`.
+
+    ```java
+    package org.owasp.webgoat.lessons.lessontemplate;
+
+    import org.owasp.webgoat.container.lessons.Category;
+    import org.owasp.webgoat.container.lessons.Lesson;
+    import org.springframework.stereotype.Component;
+
+    @Component
+    public class LessonTemplate extends Lesson {
+
+      @Override
+      public Category getDefaultCategory() {
+        return Category.GENERAL;
+      }
+
+      @Override
+      public String getTitle() {
+        return "lesson-template.title";
+      }
+    }
+    ```
+
+    The `@Component` annotation registers the lesson with Spring so WebGoat discovers it automatically. The string returned by `getTitle()` is an i18n key looked up in `WebGoatLabels.properties`.
+
+    <Note>
+      The lesson's ID is derived from the class's simple name (e.g., `LessonTemplate`). This ID is used in URLs and to locate the corresponding HTML template file.
+    </Note>
+  </Step>
+
+  <Step title="Choose a category">
+    `getDefaultCategory()` must return one of the values from the `Category` enum:
+
+    | Enum constant      | Display name                           |
+    | ------------------ | -------------------------------------- |
+    | `INTRODUCTION`     | Introduction                           |
+    | `GENERAL`          | General                                |
+    | `A1`               | (A1) Broken Access Control             |
+    | `A2`               | (A2) Cryptographic Failures            |
+    | `A3`               | (A3) Injection                         |
+    | `A5`               | (A5) Security Misconfiguration         |
+    | `A6`               | (A6) Vuln & Outdated Components        |
+    | `A7`               | (A7) Identity & Auth Failure           |
+    | `A8`               | (A8) Software & Data Integrity         |
+    | `A9`               | (A9) Security Logging Failures         |
+    | `A10`              | (A10) Server-side Request Forgery      |
+    | `CLIENT_SIDE`      | Client side                            |
+    | `CHALLENGE`        | Challenges                             |
+
+    Categories map to the OWASP Top 10 sections displayed in the WebGoat menu.
+  </Step>
+
+  <Step title="Write the AsciiDoc content">
+    Lesson content is written in AsciiDoc. Place `.adoc` files in:
+
+    ```
+    src/main/resources/lessons/{lessonname}/documentation/
+    ```
+
+    A typical lesson splits content across multiple files — one per page in the lesson's navigation bar. For example:
+
+    ```asciidoc
+    == Introduction
+
+    This lesson covers SQL injection vulnerabilities.
+    Use this exercise to practice identifying and exploiting
+    unsanitized query parameters.
+
+    === What you will learn
+
+    * How user input reaches a SQL query
+    * How to bypass authentication with a tautology
+    ```
+
+    Images referenced in `.adoc` files are resolved from `src/main/resources/lessons/{lessonname}/images/`.
+  </Step>
+
+  <Step title="Create the HTML glue page">
+    The HTML file wires together your `.adoc` content files into pages and connects assignment forms to their endpoints. It is a Thymeleaf template and must be placed in:
+
+    ```
+    src/main/resources/lessons/{lessonname}/html/{LessonClassName}.html
+    ```
+
+    The filename must exactly match your lesson's Java class name. Each `lesson-page-wrapper` div becomes one page in the lesson's navigation bar:
+
+    ```html
+    <html xmlns:th="http://www.thymeleaf.org">
+
+      <div class="lesson-page-wrapper">
+        <div class="adoc-content"
+             th:replace="~{doc:lessons/lessontemplate/documentation/lesson-template-intro.adoc}">
+        </div>
+      </div>
+
+      <div class="lesson-page-wrapper">
+        <div class="adoc-content"
+             th:replace="~{doc:lessons/lessontemplate/documentation/lesson-template-content.adoc}">
+        </div>
+      </div>
+
+      <div class="lesson-page-wrapper">
+        <div class="adoc-content"
+             th:replace="~{doc:lessons/lessontemplate/documentation/lesson-template-attack.adoc}">
+        </div>
+        <div class="attack-container">
+          <div class="assignment-success">
+            <i class="fa fa-2 fa-check hidden" aria-hidden="true"></i>
+          </div>
+          <form class="attack-form" accept-charset="UNKNOWN"
+                method="POST" name="form"
+                th:action="@{/lesson-template/sample-attack}">
+            <table>
+              <tr>
+                <td>two random params</td>
+                <td>parameter 1:<input name="param1" value="" type="TEXT" /></td>
+                <td>parameter 2:<input name="param2" value="" type="TEXT" /></td>
+                <td><input name="submit" value="Submit" type="SUBMIT"/></td>
+              </tr>
+            </table>
+          </form>
+          <div class="attack-feedback"></div>
+          <div class="attack-output"></div>
+        </div>
+      </div>
+
+    </html>
+    ```
+
+    Pages that contain an assignment need an `attack-container` div with the form and the two feedback divs (`attack-feedback` and `attack-output`). WebGoat renders feedback from `AttackResult` into these divs automatically.
+  </Step>
+
+  <Step title="Create an assignment endpoint">
+    An assignment is a Spring `@RestController` that implements the `AssignmentEndpoint` marker interface. It must have at least one handler method that returns `AttackResult`.
+
+    ```java
+    package org.owasp.webgoat.lessons.lessontemplate;
+
+    import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
+    import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
+
+    import java.util.List;
+    import lombok.AllArgsConstructor;
+    import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
+    import org.owasp.webgoat.container.assignments.AssignmentHints;
+    import org.owasp.webgoat.container.assignments.AttackResult;
+    import org.owasp.webgoat.container.session.LessonSession;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.PathVariable;
+    import org.springframework.web.bind.annotation.PostMapping;
+    import org.springframework.web.bind.annotation.RequestParam;
+    import org.springframework.web.bind.annotation.ResponseBody;
+    import org.springframework.web.bind.annotation.RestController;
+
+    @RestController
+    @AssignmentHints({"lesson-template.hints.1", "lesson-template.hints.2", "lesson-template.hints.3"})
+    public class SampleAttack implements AssignmentEndpoint {
+      private static final String secretValue = "secr37Value";
+
+      private final LessonSession userSessionData;
+
+      public SampleAttack(LessonSession userSessionData) {
+        this.userSessionData = userSessionData;
+      }
+
+      @PostMapping("/lesson-template/sample-attack")
+      @ResponseBody
+      public AttackResult completed(
+          @RequestParam("param1") String param1, @RequestParam("param2") String param2) {
+        if (userSessionData.getValue("some-value") != null) {
+          // do any session updating you want here ... or not, just comment/example here
+          // return failed().feedback("lesson-template.sample-attack.failure-2").build());
+        }
+
+        // overly simple example for success. See other existing lessons for ways to detect 'success'
+        // or 'failure'
+        if (secretValue.equals(param1)) {
+          return success(this)
+              .output("Custom Output ...if you want, for success")
+              .feedback("lesson-template.sample-attack.success")
+              .build();
+          // lesson-template.sample-attack.success is defined in
+          // src/main/resources/i18n/WebGoatLabels.properties
+        }
+
+        // else
+        return failed(this)
+            .feedback("lesson-template.sample-attack.failure-2")
+            .output(
+                "Custom output for this failure scenario, usually html that will get rendered directly"
+                    + " ... yes, you can self-xss if you want")
+            .build();
+      }
+
+      @GetMapping("lesson-template/shop/{user}")
+      @ResponseBody
+      public List<Item> getItemsInBasket(@PathVariable("user") String user) {
+        return List.of(
+            new Item("WG-1", "WebGoat promo", 12.0), new Item("WG-2", "WebGoat sticker", 0.00));
+      }
+
+      @AllArgsConstructor
+      private class Item {
+        private String number;
+        private String description;
+        private double price;
+      }
+    }
+    ```
+
+    WebGoat automatically discovers all `AssignmentEndpoint` implementations and associates them with the lesson whose package they belong to.
+  </Step>
+
+  <Step title="Use AttackResult to grade submissions">
+    Every handler method that checks a user's answer must return an `AttackResult`. Use the static factory methods from `AttackResultBuilder`:
+
+    <AccordionGroup>
+      <Accordion title="success(this) — mark the assignment as solved">
+        ```java
+        return success(this)
+            .feedback("my-lesson.attack.success")   // i18n key for feedback message
+            .output("Optional extra HTML output")    // rendered in .attack-output div
+            .build();
+        ```
+
+        `success()` sets `assignmentCompleted = true` and defaults the feedback key to `assignment.solved`. Override with `.feedback()` to show a custom message.
+      </Accordion>
+
+      <Accordion title="failed(this) — record a failed attempt">
+        ```java
+        return failed(this)
+            .feedback("my-lesson.attack.failure")
+            .output("Hint or explanation of what went wrong")
+            .build();
+        ```
+
+        `failed()` sets `assignmentCompleted = false` and defaults the feedback key to `assignment.not.solved`.
+      </Accordion>
+
+      <Accordion title="informationMessage(this) — feedback without grading">
+        ```java
+        return informationMessage(this)
+            .feedback("my-lesson.info.message")
+            .build();
+        ```
+
+        Use this for informational responses that do not affect the assignment's solved state.
+      </Accordion>
+
+      <Accordion title="feedbackArgs and outputArgs — parameterized messages">
+        Both `.feedback()` and `.output()` keys are looked up via Spring's `MessageSource`. Pass arguments for placeholder substitution:
+
+        ```java
+        return failed(this)
+            .feedback("my-lesson.failure.with-args")
+            .feedbackArgs(submittedValue)
+            .build();
+        ```
+
+        The corresponding `WebGoatLabels.properties` entry would be:
+
+        ```
+        my-lesson.failure.with-args=You submitted '{0}', which is not correct.
+        ```
+      </Accordion>
+    </AccordionGroup>
+
+    <Note>
+      All new lessons must include an integration test that exercises the assignment endpoint. Unit tests for helper logic are also expected. PRs without integration tests for new lessons will not be accepted.
+    </Note>
+  </Step>
+
+  <Step title="Add i18n labels">
+    Feedback messages, hints, and the lesson title are resolved from properties files. Place your labels in:
+
+    ```
+    src/main/resources/lessons/{lessonname}/i18n/WebGoatLabels.properties
+    ```
+
+    A minimal example:
+
+    ```
+    lesson-template.title=Lesson Template
+    lesson-template.hints.1=Try looking at the source code
+    lesson-template.hints.2=The secret value is a string
+    lesson-template.hints.3=The value starts with 'secr'
+    lesson-template.sample-attack.success=Well done! You found the secret value.
+    lesson-template.sample-attack.failure-2=That is not the correct value. Try again.
+    ```
+
+    The key returned by `getTitle()` in your lesson class must have a corresponding entry here.
+  </Step>
+</Steps>
+
+## How WebGoat discovers lessons
+
+WebGoat uses Spring component scanning to find all `@Component`-annotated classes that extend `Lesson`, and all `@RestController`-annotated classes that implement `AssignmentEndpoint`. No manual registration is required — just place your classes under `org.owasp.webgoat.lessons`.
+
+The lesson's package name (the segment immediately below `org.owasp.webgoat.lessons`) is used to locate its resource files under `src/main/resources/lessons/`. For example, a class in `org.owasp.webgoat.lessons.lessontemplate` maps to `src/main/resources/lessons/lessontemplate/`.
+
+## Related pages
+
+- [Contributing guide](/contributing/guide) — PR process, code quality requirements, and commit conventions
+- [Lessons overview](/lessons/overview) — How WebGoat lessons are structured for learners

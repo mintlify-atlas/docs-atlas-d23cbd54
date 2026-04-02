@@ -1,0 +1,85 @@
+---
+title: 'Broken access control'
+description: Learn IDOR, missing function-level access control, authentication bypass, session hijacking, and spoofed cookies through hands-on WebGoat lessons.
+keywords: ['broken access control', 'idor', 'authentication bypass', 'hijack session', 'owasp a1', 'webgoat']
+---
+
+Access control enforces that users can only act within their intended permissions. When access control is broken, users can view or modify data belonging to other users, access administrative functions without authorization, or impersonate other accounts entirely. Broken Access Control ranked **#1 in the OWASP Top 10**, reflecting how widespread and impactful these vulnerabilities are in real applications.
+
+<Note>
+These lessons map to OWASP Top 10 category **(A1) Broken Access Control**.
+</Note>
+
+<Warning>
+The accounts and data used in these lessons are fictional, but the attack techniques are real. Practice only on WebGoat and other applications you have explicit permission to test.
+</Warning>
+
+## Lessons in this category
+
+<AccordionGroup>
+  <Accordion title="Insecure Direct Object References (IDOR)">
+    A Direct Object Reference occurs when an application uses a client-provided value — a URL parameter, form field, or path segment — to look up a database record or file directly. The reference is *insecure* when the application does not verify that the requesting user is authorized to access the referenced object.
+
+    A typical vulnerable URL looks like:
+
+    ```
+    https://example.com/app/user/23398
+    ```
+
+    If you change `23398` to `23399` and the server returns another user's profile without checking ownership, the reference is insecure. The same applies to POST, PUT, and DELETE requests — any method that accepts a resource identifier is potentially vulnerable.
+
+    The IDOR lesson in WebGoat walks you through:
+    - Viewing your own profile through the standard application flow to understand what a normal reference looks like
+    - Identifying the object reference being used and recognizing that it is sequential and predictable
+    - Manipulating the reference to view another user's profile (horizontal privilege escalation)
+    - Manipulating the reference to edit another user's profile data
+    - Understanding alternative path structures the application uses for the same resource and bypassing controls that only protect the primary path
+
+    Mitigation involves performing server-side authorization checks on every request, using indirect reference maps or non-guessable identifiers (UUIDs), and never trusting client-supplied object identifiers without validation.
+  </Accordion>
+
+  <Accordion title="Missing function level access control">
+    While IDOR is a horizontal access control issue — one user accessing another user's data at the same privilege level — missing function level access control is a vertical issue: lower-privileged users accessing functionality intended only for administrators or higher-privileged roles.
+
+    Many applications hide admin menus from the UI for regular users but fail to enforce access restrictions at the server side. An attacker can discover these hidden endpoints by inspecting the page source, reviewing JavaScript bundles, or using a proxy to watch what URLs the application calls. Once discovered, the attacker sends a direct request to the restricted endpoint without going through the UI — and the server, having no server-side check, honors it.
+
+    The WebGoat lesson demonstrates:
+    - How client-side controls (hidden menus, disabled buttons, absent links) are trivially bypassed
+    - Discovering unreferenced administrative endpoints by examining source and network traffic
+    - Accessing a restricted function as an unprivileged user
+    - Understanding why role checks must be enforced in every server-side method, not just in the routing layer or the UI
+
+    The fix is consistently applying authorization checks on every function call on the server, regardless of whether the UI exposes a path to that function.
+  </Accordion>
+
+  <Accordion title="Authentication bypass">
+    Authentication bypass vulnerabilities allow an attacker to skip the login step entirely or to authenticate as a different user without knowing their credentials. These flaws often stem from logic errors in the authentication workflow rather than from a single missing check.
+
+    Common patterns include:
+    - Flawed multi-step login flows where completing step one grants partial trust that the server incorrectly extends
+    - Hidden parameters that switch the application into a debug or bypass mode
+    - Predictable or skippable verification tokens in password reset and account recovery flows
+
+    The WebGoat authentication bypass lesson presents a multi-step login process with a hidden parameter that, when manipulated, allows you to skip the second authentication factor entirely. You learn to identify which parameters the server uses to track login state and how to manipulate them to advance through the flow without supplying valid credentials.
+  </Accordion>
+
+  <Accordion title="Hijack session">
+    Session hijacking involves stealing or forging a valid session token to impersonate an authenticated user. If an application generates session tokens that are predictable — using sequential integers, weak random number generators, or timestamps — an attacker can enumerate or calculate valid tokens belonging to other users.
+
+    The WebGoat hijack session lesson teaches you to:
+    - Observe the pattern in session token values by logging in multiple times and comparing tokens
+    - Identify the predictable component of the token (e.g., a sequential counter combined with a timestamp)
+    - Enumerate token values to find one belonging to an active session
+    - Submit the discovered token to take over that session
+
+    Secure session management requires cryptographically random tokens of sufficient length (at least 128 bits of entropy), transmitted only over HTTPS, with `HttpOnly` and `Secure` cookie attributes set.
+  </Accordion>
+
+  <Accordion title="Spoofed cookie">
+    Some applications store authorization data directly in a cookie — encoding a username, role, or permission flag — and trust this value on the server without verifying its integrity. An attacker who can read or guess the cookie's encoding scheme can forge a cookie that grants elevated privileges.
+
+    The WebGoat spoofed cookie lesson shows how an application encodes role information in a cookie using a simple and reversible scheme. You decode the cookie, identify the role field, change it to an administrative value, re-encode it, and send it back. The server, trusting the cookie without signature verification, grants admin access.
+
+    The correct defense is to never store authorization data client-side in a form the client can modify, or to protect it with a server-side signature (e.g., an HMAC) and verify that signature on every request.
+  </Accordion>
+</AccordionGroup>

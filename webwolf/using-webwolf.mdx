@@ -1,0 +1,159 @@
+---
+title: "Using WebWolf"
+description: "How to use WebWolf's request tracker, mailbox, file server, and JWT editor during WebGoat lessons."
+---
+
+WebWolf runs as a separate application from WebGoat. Open it in a new browser tab and log in with the same credentials you use for WebGoat.
+
+<Tabs>
+  <Tab title="Standalone">
+    ```bash
+    http://localhost:9090/WebWolf
+    ```
+  </Tab>
+  <Tab title="Docker">
+    ```bash
+    http://localhost:9090/WebWolf
+    ```
+    If you changed the default port mapping in your `docker run` command, replace `9090` with the host port you mapped to the container's port 9090.
+  </Tab>
+</Tabs>
+
+<Tip>
+Use the same username and password for WebWolf as you do for WebGoat. WebWolf's mailbox and request tracker filter results by the currently logged-in user, so mismatched accounts will cause you to miss captured data.
+</Tip>
+
+---
+
+## Request tracker
+
+The request tracker (also called the landing page) logs every HTTP request that arrives at `/WebWolf/landing/**`. This is your attacker-controlled endpoint. When a WebGoat lesson instructs you to send traffic to your WebWolf URL — or when you craft a payload that makes WebGoat's browser call out to an external host — this is where you read the results.
+
+Supported HTTP methods: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.
+
+<Steps>
+  <Step title="Open the incoming requests view">
+    Navigate to:
+    ```bash
+    http://localhost:9090/WebWolf/requests
+    ```
+    The page lists all requests received at your landing URL, newest first. Each entry shows the timestamp, path, and full request details as JSON.
+  </Step>
+  <Step title="Craft a payload that targets your landing URL">
+    In the lesson, construct a URL or payload that causes the target to make a request to:
+    ```bash
+    http://localhost:9090/WebWolf/landing/<anything>
+    ```
+    For example, an XSS payload that exfiltrates a cookie might redirect to:
+    ```bash
+    http://localhost:9090/WebWolf/landing?cookie=<stolen_value>
+    ```
+  </Step>
+  <Step title="Trigger the attack in WebGoat">
+    Submit your payload inside the WebGoat lesson. The victim application or browser will send a request to WebWolf.
+  </Step>
+  <Step title="Read the captured request">
+    Refresh the requests page in WebWolf. The incoming request appears in the list with its full query string, headers, and body. Extract the token, cookie, or code the lesson asks for.
+  </Step>
+</Steps>
+
+<Note>
+In a shared classroom setup, WebWolf only shows you requests relevant to your own account. Requests to `/WebWolf/landing` that contain another user's unique code are hidden from your view.
+</Note>
+
+---
+
+## Mailbox
+
+WebWolf's mailbox receives emails that WebGoat sends during lessons. Each user has a private inbox — only emails addressed to your username appear when you are logged in.
+
+<Steps>
+  <Step title="Open your inbox">
+    Navigate to:
+    ```bash
+    http://localhost:9090/WebWolf/mail
+    ```
+    If the lesson has already triggered an email, it appears here immediately.
+  </Step>
+  <Step title="Trigger the email from WebGoat">
+    Follow the lesson instructions to initiate the action that sends an email — for example, submitting your WebGoat username into a password reset form.
+  </Step>
+  <Step title="Read the email">
+    Return to your WebWolf mailbox. The email arrives in the inbox with its subject, sender, and body. Copy the link, token, or code from the email body for use in the lesson.
+  </Step>
+</Steps>
+
+<Warning>
+Emails are stored in the shared in-memory database. If WebWolf or WebGoat restarts, the inbox is cleared.
+</Warning>
+
+---
+
+## File server
+
+The file server lets you upload files and serve them at a publicly accessible URL. This is useful for lessons that require the vulnerable application to fetch an external resource — for example, an XXE attack where you supply a malicious DTD, or an SSRF lesson where WebGoat fetches a URL you control.
+
+<Steps>
+  <Step title="Open the file manager">
+    Navigate to:
+    ```bash
+    http://localhost:9090/WebWolf/files
+    ```
+  </Step>
+  <Step title="Upload your file">
+    Use the upload form to select and submit the file. After a successful upload you are redirected back to the files list. Your file appears in the table with its name, size, creation time, and a direct link.
+
+    Maximum file size is **1 MB**.
+  </Step>
+  <Step title="Copy the file URL">
+    Click the link in the table, or copy the URL pattern shown below and substitute your username and filename:
+    ```bash
+    http://localhost:9090/WebWolf/files/<username>/<filename>
+    ```
+    This URL is accessible without authentication and can be referenced from any WebGoat lesson payload.
+  </Step>
+  <Step title="Reference the URL in your payload">
+    Paste the file URL into the lesson's input field or your crafted payload. When WebGoat fetches the URL, it retrieves your hosted file from WebWolf.
+  </Step>
+</Steps>
+
+<Tip>
+You can also retrieve the raw filesystem path where WebWolf stores uploads by calling:
+```bash
+http://localhost:9090/WebWolf/file-server-location
+```
+This returns a plain-text path, which can be useful when a lesson asks you to reference the server-side path directly.
+</Tip>
+
+---
+
+## JWT editor
+
+The JWT editor lets you decode an existing token, modify its header or payload, optionally re-sign it with a secret key, and copy the resulting encoded token back into the lesson.
+
+<Steps>
+  <Step title="Open the JWT editor">
+    Navigate to:
+    ```bash
+    http://localhost:9090/WebWolf/jwt
+    ```
+  </Step>
+  <Step title="Paste the token to decode">
+    Paste the JWT from the lesson into the token field. Submit the form to decode it. The editor displays the header and payload as formatted JSON, and validates the structure of each part.
+  </Step>
+  <Step title="Modify the header or payload">
+    Edit the JSON fields directly in the editor. Common modifications include changing the `alg` claim in the header (for algorithm confusion attacks) or altering role and user claims in the payload.
+  </Step>
+  <Step title="Re-sign the token">
+    If the lesson requires a valid signature, enter the HMAC secret key in the secret key field. Submit to encode and sign the token. The editor returns the new compact-serialized JWT.
+
+    To verify a token against a JWKS endpoint instead of a shared secret, paste the JWKS JSON into the JWKS field.
+  </Step>
+  <Step title="Copy the result">
+    Copy the encoded token from the output field and paste it into the WebGoat lesson where the modified token is required.
+  </Step>
+</Steps>
+
+<Note>
+The JWT editor signs tokens using HMAC (HS256/HS384/HS512) when a secret key is provided. It does not generate RSA or ECDSA key pairs. For asymmetric algorithm attacks, generate your own key pair with a separate tool and use the JWKS field for verification.
+</Note>

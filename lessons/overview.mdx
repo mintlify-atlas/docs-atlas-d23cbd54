@@ -1,0 +1,74 @@
+---
+title: 'Lessons overview'
+description: Browse all WebGoat security lessons organized by OWASP Top 10 category.
+keywords: ['webgoat', 'lessons', 'owasp top 10', 'security training', 'overview']
+---
+
+WebGoat lessons are hands-on exercises designed to teach web application security by letting you exploit real vulnerabilities in a safe environment. Each lesson follows the same three-part structure: reading material that explains the vulnerability concept, interactive assignments where you practice the attack or defense, and hints you can reveal if you get stuck.
+
+<Note>
+WebGoat is intentionally insecure. Run it only in an isolated environment — never expose it to the internet or a network you do not fully control.
+</Note>
+
+## How lessons work
+
+When you open a lesson you land on the **reading material** tab. This explains the vulnerability, shows examples, and sets context before you attempt the assignment. Once you understand the concept, switch to the **assignment** tab to interact with a live vulnerable endpoint.
+
+Each assignment accepts your input and responds with pass/fail feedback. If you are stuck, click **Show hints** to receive progressive guidance without immediately giving away the answer. Your progress is tracked per-lesson and persists across browser sessions.
+
+To start fresh on a lesson, click the **Reset** button in the lesson toolbar. This clears your previous answers and resets any server-side state that the lesson depends on.
+
+## Lesson categories
+
+Lessons are organized by the OWASP Top 10 and related security topics. The categories match the `Category` enum defined in `Category.java`:
+
+<CardGroup cols={2}>
+  <Card title="(A1) Broken Access Control" icon="lock-open" href="/lessons/broken-access-control">
+    IDOR, missing function-level access control, authentication bypass, session hijacking, and spoofed cookies.
+  </Card>
+  <Card title="(A2) Cryptographic Failures" icon="key" href="/lessons/cryptographic-failures">
+    Weak hashing, insecure password storage, JWT vulnerabilities, and cryptography basics.
+  </Card>
+  <Card title="(A3) Injection" icon="terminal" href="/lessons/injection">
+    SQL injection (introductory and advanced), SQL mitigation, XXE, and server-side request forgery.
+  </Card>
+  <Card title="(A5) Security Misconfiguration" icon="wrench" href="/lessons/security-misconfiguration">
+    XXE, path traversal, open redirect, security logging failures, and vulnerable components.
+  </Card>
+  <Card title="Client side" icon="globe" href="/lessons/client-side">
+    XSS (reflected, stored, DOM-based), CSRF, HTML tampering, client-side filtering bypass, and HTTP proxies.
+  </Card>
+  <Card title="Introduction & General" icon="book-open" href="/introduction">
+    WebGoat introduction, WebWolf introduction, HTTP basics, CIA triad, and HTTP proxies.
+  </Card>
+</CardGroup>
+
+### Additional categories
+
+The following categories contain lessons not covered by the dedicated pages above:
+
+| Category | Description |
+|---|---|
+| **(A6) Vuln & Outdated Components** | Learn to identify and mitigate risks from outdated or known-vulnerable third-party libraries. |
+| **(A7) Identity & Auth Failure** | Covers authentication flaws including insecure login, password reset weaknesses, and bypass techniques. |
+| **(A8) Software & Data Integrity** | Explores deserialization attacks and supply-chain integrity issues. |
+| **(A9) Security Logging Failures** | Understand what security events must be logged and what bad or missing logging looks like. |
+| **(A10) Server-side Request Forgery** | Covered in the Injection page — SSRF lets attackers make server-initiated requests to internal resources. |
+| **Challenges** | End-to-end capture-the-flag challenges that combine multiple vulnerability classes. |
+
+## Resetting, hints, and progress
+
+**Resetting a lesson** — Click the reset icon in the top-right of any lesson to clear your submitted answers and restore the lesson's initial database state. This is useful when you want to try a different approach or start from scratch after reading the solution.
+
+**Using hints** — Hints are progressively revealed. The first hint usually points you toward the right part of the interface; later hints give more concrete guidance. Try to solve each assignment without hints first — that is where the real learning happens.
+
+**Checking progress** — Your completed lessons are shown with a checkmark in the sidebar. You can see an overall progress summary on the WebGoat home screen after logging in.
+
+## Customizing which lessons load
+
+WebGoat supports two environment properties that control which lessons are available at startup:
+
+- `EXCLUDE_CATEGORIES` — a comma-separated list of `Category` enum values (e.g., `CHALLENGE,GENERAL`) to hide entire categories from the lesson menu.
+- `EXCLUDE_LESSONS` — a comma-separated list of specific lesson class names to hide individual lessons without removing their whole category.
+
+These are useful in classroom settings where the instructor wants to limit scope, or in CI pipelines where only specific vulnerability classes are being tested.

@@ -1,0 +1,129 @@
+---
+title: "Running with Docker"
+description: Run WebGoat using Docker
+---
+
+Docker is the fastest way to get WebGoat running. You only need Docker installed — no JDK required.
+
+<Warning>
+  Never expose WebGoat ports beyond `127.0.0.1`. WebGoat is deliberately vulnerable, and binding it to a public interface puts your machine at risk. Disconnect from the internet while using WebGoat.
+</Warning>
+
+## Before you start
+
+Make sure Docker is installed and running on your machine. Every WebGoat release is published to [DockerHub](https://hub.docker.com/r/webgoat/webgoat).
+
+Port assignments:
+
+| Port | Service  |
+| ---- | -------- |
+| 8080 | WebGoat  |
+| 9090 | WebWolf  |
+
+## Basic usage
+
+<Steps>
+  <Step title="Pull and run the image">
+    ```bash
+    docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 webgoat/webgoat
+    ```
+  </Step>
+  <Step title="Open WebGoat">
+    Navigate to [http://localhost:8080/WebGoat](http://localhost:8080/WebGoat) and create an account to get started.
+  </Step>
+</Steps>
+
+## Usage scenarios
+
+<CodeGroup>
+
+```bash Basic
+docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 webgoat/webgoat
+```
+
+```bash With timezone
+docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 -e TZ=America/Boise webgoat/webgoat
+```
+
+```bash With proxy (ZAP/Burp)
+docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 \
+  -e WEBGOAT_HOST=www.webgoat.local \
+  -e WEBWOLF_HOST=www.webwolf.local \
+  -e TZ=America/Boise \
+  webgoat/webgoat
+```
+
+```bash With custom menu
+docker run -d -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 \
+  -e EXCLUDE_CATEGORIES="CLIENT_SIDE,GENERAL,CHALLENGE" \
+  -e EXCLUDE_LESSONS="SqlInjectionAdvanced,SqlInjectionMitigations" \
+  webgoat/webgoat
+```
+
+```bash Desktop image
+docker run -p 127.0.0.1:3000:3000 webgoat/webgoat-desktop
+```
+
+</CodeGroup>
+
+## Setting a timezone
+
+Some lessons depend on the container running in the same timezone as your machine. Pass the `TZ` environment variable to match your local timezone:
+
+```bash
+docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 -e TZ=America/Boise webgoat/webgoat
+```
+
+<Note>
+  Set `TZ` to a value from the [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), for example `America/New_York` or `Asia/Tokyo`. See [Configuration](/running/configuration) for all available environment variables.
+</Note>
+
+## Using a proxy tool (ZAP or Burp)
+
+When you intercept traffic with a proxy like OWASP ZAP or Burp Suite, the proxy breaks requests to `127.0.0.1` and `localhost`. Use custom hostnames instead.
+
+<Steps>
+  <Step title="Add entries to /etc/hosts">
+    Open `/etc/hosts` with administrator/root privileges and add the following line:
+
+    ```
+    127.0.0.1 www.webgoat.local www.webwolf.local
+    ```
+  </Step>
+  <Step title="Run the container with the custom hostnames">
+    ```bash
+    docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 \
+      -e WEBGOAT_HOST=www.webgoat.local \
+      -e WEBWOLF_HOST=www.webwolf.local \
+      -e TZ=America/Boise \
+      webgoat/webgoat
+    ```
+  </Step>
+  <Step title="Open WebGoat and WebWolf using the custom hostnames">
+    - WebGoat: [http://www.webgoat.local:8080/WebGoat](http://www.webgoat.local:8080/WebGoat)
+    - WebWolf: [http://www.webwolf.local:9090/WebWolf](http://www.webwolf.local:9090/WebWolf)
+  </Step>
+</Steps>
+
+## Custom menu
+
+You can hide lesson categories or specific lessons to tailor WebGoat for a workshop or course. Pass one or both environment variables:
+
+```bash
+docker run -d -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 \
+  -e EXCLUDE_CATEGORIES="CLIENT_SIDE,GENERAL,CHALLENGE" \
+  -e EXCLUDE_LESSONS="SqlInjectionAdvanced,SqlInjectionMitigations" \
+  webgoat/webgoat
+```
+
+See [Configuration](/running/configuration) for a full description of these options.
+
+## Desktop image
+
+If you prefer not to install tools locally, use the desktop image. It runs a full Linux desktop in your browser — including WebGoat, WebWolf, and a browser — all in one container.
+
+```bash
+docker run -p 127.0.0.1:3000:3000 webgoat/webgoat-desktop
+```
+
+Then open [http://localhost:3000](http://localhost:3000) in your browser.

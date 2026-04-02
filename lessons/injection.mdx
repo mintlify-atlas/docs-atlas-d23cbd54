@@ -1,0 +1,93 @@
+---
+title: 'Injection attacks'
+description: Learn SQL injection, XXE, SSRF, and other injection vulnerabilities through hands-on WebGoat lessons.
+keywords: ['sql injection', 'sqli', 'xxe', 'ssrf', 'injection', 'webgoat', 'owasp a3']
+---
+
+Injection attacks occur when untrusted data is sent to an interpreter as part of a command or query. The attacker's hostile input tricks the interpreter into executing unintended commands or accessing data without authorization. Injection has consistently ranked at or near the top of the OWASP Top 10 because the vulnerability class is broad, the impact can be severe, and flawed code is still extremely common.
+
+<Note>
+These lessons map to OWASP Top 10 category **(A3) Injection** and **(A10) Server-side Request Forgery**.
+</Note>
+
+## SQL injection
+
+SQL injection (SQLi) is one of the oldest and most well-understood attack classes — yet it continues to appear in production systems. An injection occurs when user-supplied input is concatenated directly into a SQL query rather than being treated as data. Because the database cannot distinguish the injected SQL from the intended query, it executes both.
+
+A vulnerable query might look like:
+
+```
+SELECT * FROM users WHERE name = '" + userName + "'";
+```
+
+If an attacker provides `' OR '1'='1` as the username, the resulting query returns every row in the table. More destructive payloads can update or delete data, call stored procedures, or read files from the operating system.
+
+SQL injection also violates all three pillars of the CIA triad:
+- **Confidentiality** — an attacker can read data they are not authorized to see.
+- **Integrity** — an attacker can modify or delete records.
+- **Availability** — destructive payloads like `DROP TABLE` can destroy data entirely.
+
+<AccordionGroup>
+  <Accordion title="SQL injection introduction">
+    The introductory SQL injection lesson begins by teaching you what SQL is: a standardized language for managing relational databases using Data Manipulation Language (DML), Data Definition Language (DDL), and Data Control Language (DCL) commands. You work against a live `employees` table containing userids, names, departments, salaries, and transaction authentication numbers.
+
+    The lesson walks you through:
+    - Writing basic `SELECT` statements to retrieve records
+    - Understanding how string and numeric inputs are handled differently by SQL parsers
+    - Performing your first string-based injection to retrieve data you should not be able to access
+    - Performing a numeric injection that breaks out of the intended query logic
+    - Observing how each attack maps to a CIA triad violation
+
+    By the end of the introductory section you will have bypassed authentication, exfiltrated salary data, and modified records — all through input fields that look like ordinary form fields.
+  </Accordion>
+
+  <Accordion title="SQL injection (advanced)">
+    The advanced SQL injection lesson builds on the introductory material and covers techniques that are harder to detect and exploit. Topics include:
+
+    - **Combining techniques** — chaining multiple injection steps across different input fields in the same request
+    - **Blind SQL injection** — extracting data one bit or character at a time when the application does not echo query results back to the page; you infer information from differences in response time or application behavior
+    - **UNION-based injection** — appending a second `SELECT` statement to the original query to retrieve data from a different table in the same response
+
+    These techniques are used by real attackers when simpler payloads are blocked or when the application returns no visible error output. Mastering blind injection in particular is valuable because it is the most common form encountered in the wild.
+  </Accordion>
+
+  <Accordion title="SQL injection mitigation">
+    After learning how SQL injection works, this lesson focuses entirely on how to prevent it. The core defense is **parameterized queries** (also called prepared statements), where the SQL statement structure is fixed at compile time and user input is always passed as a typed parameter — never interpolated into the query string.
+
+    The lesson compares vulnerable JDBC code with its fixed equivalent and has you rewrite the vulnerable version yourself. You will also learn about:
+    - **Input validation** — rejecting characters that have no legitimate use in a given field
+    - **Stored procedures** — a partial mitigation, but only when they themselves use parameterization internally
+    - **Least privilege** — configuring the database account used by the application with only the permissions it needs, so that a successful injection cannot drop tables or read system files
+
+    The lesson reinforces that output encoding and WAF rules are not substitutes for parameterization.
+  </Accordion>
+
+  <Accordion title="XML External Entity (XXE) injection">
+    XXE is an injection attack against XML parsers. An XML document can define entities — named constants that are replaced with their values when the document is parsed. External entities extend this mechanism to load content from a URI, including `file://` paths and `http://` endpoints.
+
+    When an application accepts XML from users and passes it to a weakly configured parser, an attacker can define an external entity that reads `/etc/passwd`, an application configuration file, or an internal-only URL. The parser fetches the resource and embeds its content in the response.
+
+    The WebGoat XXE lesson covers:
+    - **Classic XXE** — an external entity defined in a local DTD that reads a file from the server's filesystem
+    - **Blind XXE** — when the parser fetches external content but the response is not reflected; data is exfiltrated out-of-band, for example by making the parser load a URL you control
+    - **Error-based XXE** — triggering a parser error message that contains the contents of the target file
+    - **Content-type switching** — sending XML in a request that normally expects JSON, exploiting the parser if the server accepts both formats
+
+    Mitigation focuses on disabling external entity processing in the XML parser configuration and on validating or rejecting XML input that contains a DTD.
+  </Accordion>
+
+  <Accordion title="Server-Side Request Forgery (SSRF)">
+    In an SSRF attack, the attacker causes the server to make outbound HTTP requests on their behalf. The server's requests originate from inside the network perimeter, so they can reach internal services (databases, metadata endpoints, admin panels) that are not accessible from the internet.
+
+    Common SSRF targets include:
+    - Cloud instance metadata endpoints such as `http://169.254.169.254/latest/meta-data/` (AWS)
+    - Internal HTTP-enabled databases like Redis or Elasticsearch
+    - Admin interfaces bound to `localhost` that are never exposed externally
+
+    The WebGoat SSRF lesson presents a feature that fetches a URL server-side and returns the result. You manipulate the URL parameter to redirect the request to internal addresses that should not be reachable, demonstrating how a seemingly innocent "fetch this image" feature can become an internal network scanner. You examine what the browser sends, adjust the request using a proxy, and retrieve data that the server was never intended to expose.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+Use a local HTTP proxy such as OWASP ZAP or Burp Suite while working through these lessons. Intercepting and replaying requests gives you fine-grained control over every parameter and makes it much easier to craft and iterate on injection payloads.
+</Tip>

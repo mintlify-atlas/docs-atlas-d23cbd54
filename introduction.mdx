@@ -1,0 +1,59 @@
+---
+title: "What is WebGoat"
+description: "An overview of WebGoat — OWASP's deliberately insecure web application for learning web security through hands-on practice."
+---
+
+WebGoat is a deliberately insecure web application maintained by [OWASP](https://owasp.org/) that teaches web application security through interactive, hands-on exercises. Each lesson introduces a real vulnerability, lets you exploit it, and then explains how to prevent it in your own applications.
+
+<Warning>
+  WebGoat is intentionally full of security vulnerabilities. Never run it on a machine connected to the internet or to any network you care about. WebGoat binds to `127.0.0.1` by default to reduce exposure, but you should treat it as you would any other intentionally dangerous software — isolated and offline.
+</Warning>
+
+## Who it's for
+
+WebGoat is built for anyone who wants to understand web application security from the inside:
+
+- **Developers** who want to learn which coding patterns introduce vulnerabilities and how to avoid them.
+- **Testers and QA engineers** who want to practice identifying common security flaws before they reach production.
+- **Security professionals** who are learning penetration testing techniques in a legal, controlled environment.
+- **Students** working through security certifications or coursework that covers the OWASP Top 10.
+
+No prior security experience is required. Lessons start with background reading and progress to interactive assignments that run against the live (vulnerable) application.
+
+## The OWASP connection
+
+WebGoat is an [OWASP Lab project](https://owasp.org/projects/). The Open Worldwide Application Security Project (OWASP) is a nonprofit that publishes free, open resources on application security — most notably the OWASP Top 10, a regularly updated list of the most critical web application security risks.
+
+WebGoat's lesson curriculum maps directly to the OWASP Top 10 categories:
+
+| Category | Name |
+|----------|------|
+| A1 | Broken Access Control |
+| A2 | Cryptographic Failures |
+| A3 | Injection |
+| A5 | Security Misconfiguration |
+| A6 | Vulnerable and Outdated Components |
+| A7 | Identification and Authentication Failures |
+| A8 | Software and Data Integrity Failures |
+| A9 | Security Logging and Monitoring Failures |
+| A10 | Server-Side Request Forgery (SSRF) |
+
+In addition to the Top 10, WebGoat includes **Introduction** and **General** lessons for newcomers, **Client-Side** lessons covering browser-based attacks, and **Challenges** for more advanced practice.
+
+## WebWolf
+
+WebWolf is a companion application that runs alongside WebGoat. Some lessons require you to act as an attacker receiving data from the vulnerable application — for example, intercepting a password reset link or catching a file upload. WebWolf provides that attacker-controlled server. It runs on port `9090` and is included in all standard WebGoat Docker and standalone distributions.
+
+## Where to go next
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Get WebGoat running in 5 minutes using Docker.
+  </Card>
+  <Card title="Security lessons" icon="shield-halved" href="/lessons/overview">
+    Browse all available lessons organized by OWASP category.
+  </Card>
+  <Card title="WebWolf" icon="wolf-pack-battalion" href="/webwolf/introduction">
+    Learn about the companion attacker tool used in advanced lessons.
+  </Card>
+</CardGroup>

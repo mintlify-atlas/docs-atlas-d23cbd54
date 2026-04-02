@@ -1,0 +1,102 @@
+---
+title: 'Security misconfiguration'
+description: Learn about XXE, path traversal, open redirects, security logging failures, and vulnerable components through hands-on WebGoat lessons.
+keywords: ['security misconfiguration', 'xxe', 'path traversal', 'open redirect', 'logging', 'owasp a5', 'webgoat']
+---
+
+Security misconfiguration is the most commonly found issue in security assessments. It results from insecure default configurations, incomplete or ad hoc configurations, open cloud storage, misconfigured HTTP headers, unnecessary features left enabled, and verbose error messages that disclose internal details. Misconfiguration can occur at any layer of the application stack — network, platform, web server, application framework, and custom code.
+
+<Note>
+These lessons map to OWASP Top 10 categories **(A5) Security Misconfiguration**, **(A6) Vulnerable and Outdated Components**, and **(A9) Security Logging and Monitoring Failures**.
+</Note>
+
+## Lessons in this category
+
+<AccordionGroup>
+  <Accordion title="XML External Entity (XXE)">
+    XXE vulnerabilities arise from a misconfiguration in how an XML parser is set up. XML supports a feature called external entities: a reference that instructs the parser to fetch content from a URI (a local file path or an HTTP URL) and substitute it into the document. This feature is rarely needed by applications but is enabled by default in many XML parsing libraries.
+
+    When an application accepts XML from users and passes it to a parser with external entities enabled, an attacker can craft a payload that reads sensitive files from the server's filesystem or makes the server send HTTP requests to internal addresses.
+
+    Types of XXE attacks covered in the WebGoat lesson:
+
+    - **Classic XXE** — An external entity defined in a local DTD reads a file (such as `/etc/passwd` or the `secret.txt` file included in the XXE lesson resources) and returns its contents in the response. The lesson includes static code analysis of the vulnerable Java parser configuration so you can see exactly which setting enables the attack.
+    - **Blind XXE** — The parser processes the external entity but the result is not reflected in the response. You exfiltrate data out-of-band by making the parser load a URL you control and embedding the file contents in the request path.
+    - **Content-type switching** — Some endpoints accept both JSON and XML. By changing the `Content-Type` header to `application/xml` and sending an XXE payload, you can exploit an endpoint that the development team may not have thought to test for XML injection.
+    - **XXE for SSRF** — External entities that load HTTP URLs effectively turn XXE into an SSRF vulnerability, giving you access to internal services.
+
+    Mitigation requires explicitly disabling DTD processing and external entity resolution in the parser configuration. The lesson shows the specific Java code change needed to disable these features in common parsers (JAXP, SAX, DOM).
+  </Accordion>
+
+  <Accordion title="Path traversal">
+    Path traversal (also called directory traversal or dot-dot-slash attack) occurs when an application constructs a file path using user-supplied input without properly sanitizing the path components. An attacker uses sequences like `../` to navigate up the directory tree and access files outside the intended directory.
+
+    A typical vulnerable URL:
+
+    ```
+    http://example.com/file=report.pdf
+    ```
+
+    By substituting `../../../../../etc/passwd`, the attacker walks up to the filesystem root and accesses the password file.
+
+    Filtering `../` alone is not sufficient because many web servers and application frameworks accept equivalent encodings:
+    - URL encoding: `%2e%2e%2f`
+    - Double URL encoding: `%252e%252e%252f` (necessary when the request passes through two decoding layers)
+    - Unicode variants and mixed encodings
+
+    The WebGoat path traversal lesson covers:
+
+    - **File retrieval via path traversal** — Reading files from outside the web root by manipulating a filename parameter in a GET request
+    - **Path traversal in file upload** — Uploading a file with a `../` sequence in its filename to place it outside the intended upload directory, potentially overwriting configuration files or executable code
+    - **Mitigating upload path traversal** — Validating that the canonical (resolved) path of the uploaded file still falls within the intended directory, and stripping or rejecting filenames that contain path separators
+    - **Zip Slip vulnerability** — A specific form of path traversal that occurs during ZIP file extraction. If a ZIP archive contains an entry with a filename like `../../../tmp/evil.sh`, a naive extraction loop writes the file to `/tmp/evil.sh` outside the destination directory. This can lead to remote code execution if the attacker overwrites a system binary or a cron job script.
+
+    The fix for all path traversal variants is to resolve the canonical absolute path of the target file after constructing it from user input and verify that it begins with the expected base directory before opening or writing the file.
+  </Accordion>
+
+  <Accordion title="Open redirect">
+    An open redirect occurs when an application accepts a user-controlled URL parameter and redirects the browser to it without validating that the destination is an allowed or trusted location. Attackers use open redirects in phishing campaigns: the initial URL in the malicious link looks legitimate (it points to a domain the victim trusts), but the redirect forwards the victim to an attacker-controlled site.
+
+    Example of a vulnerable redirect endpoint:
+
+    ```
+    https://trusted-bank.example.com/logout?redirect=https://evil.example.com/phish
+    ```
+
+    Because the link begins with `trusted-bank.example.com`, security-aware users and URL filters may not flag it as suspicious.
+
+    The WebGoat open redirect lesson has you identify a redirect parameter in the application, craft a URL that redirects to an external site, and understand why allowlist-based validation (accepting only a known set of safe redirect destinations) is more reliable than blacklist or prefix-matching approaches.
+  </Accordion>
+
+  <Accordion title="Security logging and monitoring failures">
+    Inadequate logging and monitoring is categorized as a misconfiguration because it is a deliberate choice — or an oversight — in how the application is configured and deployed. Without sufficient logging, attacks go undetected, incident response is slow, and forensic investigation after a breach is impossible.
+
+    Security-relevant events that must be logged include:
+    - Authentication successes and failures (with the username but never the password)
+    - Authorization failures — requests that are denied because the user lacks permission
+    - Input validation failures — high rates of validation errors on a single account or IP can indicate an attack
+    - High-value transaction events such as password changes, privilege escalations, and data exports
+
+    The WebGoat logging lesson teaches you to:
+    - Recognize what a useful log entry looks like and what critical fields are missing from an inadequate log
+    - Understand the difference between logging for debugging and logging for security monitoring
+    - Identify events in an application that should generate security log entries but currently do not
+    - Understand the risk of logging too much (e.g., including passwords or PII in log messages) versus too little
+
+    <Warning>
+    Never log sensitive data such as passwords, full credit card numbers, or session tokens. Log the *event* (e.g., "login failed for user X") not the *credential*.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Vulnerable and outdated components">
+    Every third-party library and framework included in an application is a potential attack surface. When a vulnerability is disclosed in a component and the application is not updated, the vulnerability persists indefinitely — and exploit code is often publicly available within hours of a CVE being published.
+
+    The WebGoat vulnerable components lesson demonstrates:
+    - How to identify the versions of libraries in use and look them up against known vulnerability databases (NVD, GitHub Security Advisories, OSV)
+    - The risk of transitive dependencies — a dependency of a dependency that also has a known vulnerability
+    - How attackers exploit a real historical vulnerability (the lesson uses a concrete CVE as its target)
+    - Why keeping dependencies updated is a continuous process, not a one-time task
+
+    Practical defenses include integrating software composition analysis (SCA) tools into the CI/CD pipeline to automatically block builds that introduce components with known critical vulnerabilities, maintaining a software bill of materials (SBOM), and subscribing to security advisories for frameworks you use.
+  </Accordion>
+</AccordionGroup>

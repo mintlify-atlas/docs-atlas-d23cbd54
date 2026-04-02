@@ -1,0 +1,71 @@
+---
+title: "Running as Standalone JAR"
+description: Run WebGoat as a standalone Java application
+---
+
+You can run WebGoat directly on your machine without Docker by downloading the JAR and running it with Java.
+
+<Warning>
+  WebGoat is deliberately vulnerable. Do not expose it on a network interface accessible to others. Disconnect from the internet while using WebGoat.
+</Warning>
+
+## Prerequisites
+
+- Java 25 or later
+
+Verify your Java version before continuing:
+
+```bash
+java -version
+```
+
+## Download WebGoat
+
+Download the latest `webgoat-*.jar` release from [https://github.com/WebGoat/WebGoat/releases](https://github.com/WebGoat/WebGoat/releases).
+
+## Running WebGoat
+
+<Steps>
+  <Step title="Set your timezone (recommended)">
+    Some lessons depend on the correct timezone being set. Export `TZ` before running:
+
+    ```bash
+    export TZ=Europe/Amsterdam
+    ```
+
+    Replace `Europe/Amsterdam` with your local timezone.
+  </Step>
+  <Step title="Run the JAR">
+    ```bash
+    java -Dfile.encoding=UTF-8 -jar webgoat-2023.8.jar
+    ```
+  </Step>
+  <Step title="Open WebGoat">
+    Watch the startup log — WebGoat prints a clickable link when it is ready. Click it or navigate to [http://localhost:8080/WebGoat](http://localhost:8080/WebGoat) and create an account to begin.
+  </Step>
+</Steps>
+
+## Running on a different port
+
+If port 8080 or 9090 is already in use on your machine, you can specify alternative ports:
+
+```bash
+java -jar webgoat-2023.8.jar --webgoat.port=8001 --webwolf.port=8002
+```
+
+## Custom menu
+
+You can hide categories or specific lessons before starting WebGoat by setting environment variables:
+
+```bash
+export TZ=Europe/Amsterdam
+export EXCLUDE_CATEGORIES="CLIENT_SIDE,GENERAL,CHALLENGE"
+export EXCLUDE_LESSONS="SqlInjectionAdvanced,SqlInjectionMitigations"
+java -jar target/webgoat-2023.8-SNAPSHOT.jar
+```
+
+See [Configuration](/running/configuration) for a full list of options.
+
+<Note>
+  All user progress and data is stored in `~/.webgoat-<version>/` in your home directory.
+</Note>

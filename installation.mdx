@@ -1,0 +1,158 @@
+---
+title: "Installation"
+description: "All the ways to install and run WebGoat: Docker, standalone JAR, from source, and Docker with a full Linux desktop."
+---
+
+WebGoat offers several installation methods depending on your setup and workflow. Docker is the simplest option for most users.
+
+<Warning>
+  WebGoat is intentionally insecure. Never run it on an internet-connected machine or expose it outside of `127.0.0.1`. Treat it as you would any deliberately vulnerable software — isolated from networks you care about.
+</Warning>
+
+<Tabs>
+  <Tab title="Docker">
+    Docker is the recommended way to run WebGoat. Every release is published to [Docker Hub](https://hub.docker.com/r/webgoat/webgoat).
+
+    **Basic run**
+
+    ```bash
+    docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 webgoat/webgoat
+    ```
+
+    This starts WebGoat on port `8080` and WebWolf on port `9090`, both bound to localhost only.
+
+    **With timezone support**
+
+    Some lessons depend on timezone-aware behavior. Set `TZ` to your local timezone to avoid issues:
+
+    ```bash
+    docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 -e TZ=America/Boise webgoat/webgoat
+    ```
+
+    **With a proxy (ZAP or Burp Suite)**
+
+    If you want to intercept traffic with OWASP ZAP or another proxy, you can't use `127.0.0.1` as the bind address. Instead, add custom host entries to your system's hosts file:
+
+    ```
+    127.0.0.1 www.webgoat.local www.webwolf.local
+    ```
+
+    Then run the container with named hosts:
+
+    ```bash
+    docker run -it -p 127.0.0.1:8080:8080 -p 127.0.0.1:9090:9090 \
+      -e WEBGOAT_HOST=www.webgoat.local \
+      -e WEBWOLF_HOST=www.webwolf.local \
+      -e TZ=America/Boise \
+      webgoat/webgoat
+    ```
+
+    Open WebGoat at `http://www.webgoat.local:8080/WebGoat/` and WebWolf at `http://www.webwolf.local:9090/WebWolf/`.
+  </Tab>
+  <Tab title="Standalone JAR">
+    If you already have Java installed and prefer not to use Docker, you can run WebGoat directly as an executable JAR.
+
+    **Download the latest release**
+
+    Download the JAR from the [GitHub releases page](https://github.com/WebGoat/WebGoat/releases/latest).
+
+    **Run with a timezone set**
+
+    ```bash
+    export TZ=Europe/Amsterdam
+    java -Dfile.encoding=UTF-8 -jar webgoat-2023.8.jar
+    ```
+
+    WebGoat will start and print a URL in the logs — click it or open `http://localhost:8080/WebGoat` manually.
+
+    **Run on a custom port**
+
+    If port `8080` is already in use, specify different ports for WebGoat and WebWolf:
+
+    ```bash
+    java -jar webgoat-2023.8.jar --webgoat.port=8001 --webwolf.port=8002
+    ```
+  </Tab>
+  <Tab title="From source">
+    Building from source lets you run the latest development version or make code changes.
+
+    **Prerequisites**
+
+    - Java 25
+    - Git
+
+    **Clone and build**
+
+    ```shell
+    git clone git@github.com:WebGoat/WebGoat.git
+    cd WebGoat
+    ```
+
+    Check out the branch you want to run, then build:
+
+    ```shell
+    # On Linux/Mac:
+    ./mvnw clean install
+
+    # On Windows:
+    ./mvnw.cmd clean install
+    ```
+
+    **Run with Spring Boot**
+
+    ```shell
+    # On Linux/Mac:
+    ./mvnw spring-boot:run
+
+    # On Windows:
+    ./mvnw.cmd spring-boot:run
+    ```
+
+    WebGoat will be available at `http://localhost:8080/WebGoat`.
+
+    **Build a local Docker image**
+
+    ```shell
+    docker build -f Dockerfile . -t webgoat/webgoat
+    ```
+  </Tab>
+  <Tab title="Desktop (Docker)">
+    The Desktop image bundles WebGoat with a full Linux desktop environment accessible in your browser. You don't need to install a browser, proxy tools, or any local software — everything runs inside the container.
+
+    ```bash
+    docker run -p 127.0.0.1:3000:3000 webgoat/webgoat-desktop
+    ```
+
+    Open `http://localhost:3000` to access the desktop in your browser. WebGoat, WebWolf, and common security testing tools are pre-installed and ready to use.
+  </Tab>
+</Tabs>
+
+## Custom lesson menu
+
+You can start WebGoat with a filtered set of lessons by setting environment variables to exclude specific categories or individual lessons. This is useful for workshops or courses focused on a particular topic.
+
+<Note>
+  Use `EXCLUDE_CATEGORIES` to hide entire lesson groups, and `EXCLUDE_LESSONS` to hide specific lessons by class name.
+
+  **JAR example:**
+
+  ```bash
+  export TZ=Europe/Amsterdam
+  export EXCLUDE_CATEGORIES="CLIENT_SIDE,GENERAL,CHALLENGE"
+  export EXCLUDE_LESSONS="SqlInjectionAdvanced,SqlInjectionMitigations"
+  java -jar target/webgoat-2023.8-SNAPSHOT.jar
+  ```
+
+  **Docker example:**
+
+  ```bash
+  docker run -d \
+    -p 127.0.0.1:8080:8080 \
+    -p 127.0.0.1:9090:9090 \
+    -e EXCLUDE_CATEGORIES="CLIENT_SIDE,GENERAL,CHALLENGE" \
+    -e EXCLUDE_LESSONS="SqlInjectionAdvanced,SqlInjectionMitigations" \
+    webgoat/webgoat
+  ```
+
+  Valid category values come from the `Category` enum: `INTRODUCTION`, `GENERAL`, `A1`, `A2`, `A3`, `A5`, `A6`, `A7`, `A8`, `A9`, `A10`, `CLIENT_SIDE`, `CHALLENGE`.
+</Note>
